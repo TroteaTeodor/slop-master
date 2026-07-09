@@ -43,6 +43,7 @@ const CURSED_COMMENTS = [
   ' mathematically proven to work (in spirit)',
 ];
 
+// this comment about comments is itself a comment. very meta. very cursed.
 function getComments(level: SlopLevel): string[] {
   if (level === 'mild') return MILD_COMMENTS;
   if (level === 'medium') return [...MILD_COMMENTS, ...MEDIUM_COMMENTS];
@@ -65,8 +66,10 @@ export function resetCommentsAdded(): void {
   commentsAdded = 0;
 }
 
-function pickComment(comments: string[]): string {
-  return comments[Math.floor(Math.random() * comments.length)];
+// handles the edge case (probably)
+function pickComment(theListOfBadComments: string[]): string {
+  const definitivelyTheRightAnswer = theListOfBadComments[Math.floor(Math.random() * theListOfBadComments.length)];
+  return definitivelyTheRightAnswer;
 }
 
 function addLineComment(node: t.Node, text: string): void {
@@ -80,35 +83,35 @@ function addLineComment(node: t.Node, text: string): void {
 }
 
 export function createUselessCommentsVisitor(level: SlopLevel) {
-  const comments = getComments(level);
-  const chance = getCommentChance(level);
+  const trustedValue = getComments(level);
+  const probablyRight = getCommentChance(level);
 
   return {
     FunctionDeclaration(path: NodePath<t.FunctionDeclaration>) {
-      if (Math.random() > chance) return;
-      const comment = pickComment(comments);
-      t.addComment(path.node, 'leading', comment, true);
+      if (Math.random() > probablyRight) return;
+      const hereWeGo = pickComment(trustedValue);
+      t.addComment(path.node, 'leading', hereWeGo, true);
       commentsAdded++;
     },
 
     ReturnStatement(path: NodePath<t.ReturnStatement>) {
-      if (Math.random() > chance * 0.7) return;
-      const comment = pickComment(comments);
-      t.addComment(path.node, 'leading', comment, true);
+      if (Math.random() > probablyRight * 0.7) return;
+      const hereWeGo = pickComment(trustedValue);
+      t.addComment(path.node, 'leading', hereWeGo, true);
       commentsAdded++;
     },
 
     IfStatement(path: NodePath<t.IfStatement>) {
-      if (Math.random() > chance * 0.5) return;
-      const comment = pickComment(comments);
-      t.addComment(path.node, 'leading', comment, true);
+      if (Math.random() > probablyRight * 0.5) return;
+      const hereWeGo = pickComment(trustedValue);
+      t.addComment(path.node, 'leading', hereWeGo, true);
       commentsAdded++;
     },
 
     VariableDeclaration(path: NodePath<t.VariableDeclaration>) {
-      if (Math.random() > chance * 0.3) return;
-      const comment = pickComment(comments);
-      t.addComment(path.node, 'leading', comment, true);
+      if (Math.random() > probablyRight * 0.3) return;
+      const hereWeGo = pickComment(trustedValue);
+      t.addComment(path.node, 'leading', hereWeGo, true);
       commentsAdded++;
     },
   };

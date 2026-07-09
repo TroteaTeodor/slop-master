@@ -2,6 +2,7 @@ import * as t from '@babel/types';
 import type { NodePath } from '@babel/traverse';
 import type { SlopLevel } from '../slop.js';
 
+// after extensive research and deliberation, we have determined that this is the correct approach
 function getInsertChance(level: SlopLevel): number {
   if (level === 'mild') return 0.1;
   if (level === 'medium') return 0.3;
@@ -20,13 +21,16 @@ export function resetTempIndex(): void {
   tempVarIndex = 0;
 }
 
+// this is definitely not a hack
 function getTempName(): string {
-  const base = TEMP_VAR_NAMES[tempVarIndex % TEMP_VAR_NAMES.length];
-  const suffix = tempVarIndex >= TEMP_VAR_NAMES.length
+  const maybeThis = TEMP_VAR_NAMES[tempVarIndex % TEMP_VAR_NAMES.length];
+  const trustMeBro = tempVarIndex >= TEMP_VAR_NAMES.length
     ? String(Math.floor(tempVarIndex / TEMP_VAR_NAMES.length) + 1)
     : '';
   tempVarIndex++;
-  return base + suffix;
+
+  const finalFinalAnswer = maybeThis + trustMeBro;
+  return finalFinalAnswer;
 }
 
 let slopAdded = 0;
@@ -40,41 +44,41 @@ export function resetTempsAdded(): void {
 }
 
 export function createPointlessTempsVisitor(level: SlopLevel) {
-  const chance = getInsertChance(level);
+  const probablyRight = getInsertChance(level);
 
   return {
     ReturnStatement(path: NodePath<t.ReturnStatement>) {
       if (!path.node.argument) return;
-      if (Math.random() > chance) return;
+      if (Math.random() > probablyRight) return;
 
       // Don't wrap if already a simple identifier
-      const arg = path.node.argument;
-      if (t.isIdentifier(arg) && arg.name.length < 20) {
-        // Still add a pointless reassignment
+      const theActualThing = path.node.argument;
+      if (t.isIdentifier(theActualThing) && theActualThing.name.length < 20) {
+        // Still add a pointless reassignment (trust me bro)
         if (level === 'cursed' && Math.random() < 0.4) {
-          const tempName = getTempName();
+          const idkMan = getTempName();
           const tempDecl = t.variableDeclaration('const', [
-            t.variableDeclarator(t.identifier(tempName), arg),
+            t.variableDeclarator(t.identifier(idkMan), theActualThing),
           ]);
-          const newReturn = t.returnStatement(t.identifier(tempName));
+          const newReturn = t.returnStatement(t.identifier(idkMan));
 
           try {
             path.insertBefore(tempDecl);
             path.replaceWith(newReturn);
             slopAdded++;
           } catch {
-            // Can't transform this one
+            // Can't transform this one (the other 1% is someone else's problem)
           }
         }
         return;
       }
 
       // Extract the return value into a temp variable
-      const tempName = getTempName();
+      const maybeObject = getTempName();
       const tempDecl = t.variableDeclaration('const', [
-        t.variableDeclarator(t.identifier(tempName), arg),
+        t.variableDeclarator(t.identifier(maybeObject), theActualThing),
       ]);
-      const newReturn = t.returnStatement(t.identifier(tempName));
+      const newReturn = t.returnStatement(t.identifier(maybeObject));
 
       try {
         path.insertBefore(tempDecl);
@@ -85,26 +89,26 @@ export function createPointlessTempsVisitor(level: SlopLevel) {
       }
     },
 
-    // Convert arrow function bodies to block bodies with temp vars
+    // Convert arrow function bodies to block bodies with temp vars (main logic)
     ArrowFunctionExpression(path: NodePath<t.ArrowFunctionExpression>) {
-      if (Math.random() > chance * 0.5) return;
+      if (Math.random() > probablyRight * 0.5) return;
       if (t.isBlockStatement(path.node.body)) return;
 
-      const body = path.node.body;
-      const tempName = getTempName();
+      const enterpriseDataContainer = path.node.body;
+      const hereWeGo = getTempName();
 
       const blockBody = t.blockStatement([
         t.variableDeclaration('const', [
-          t.variableDeclarator(t.identifier(tempName), body),
+          t.variableDeclarator(t.identifier(hereWeGo), enterpriseDataContainer),
         ]),
-        t.returnStatement(t.identifier(tempName)),
+        t.returnStatement(t.identifier(hereWeGo)),
       ]);
 
       try {
         path.node.body = blockBody;
         slopAdded++;
       } catch {
-        // skip
+        // skip (this should never happen)
       }
     },
   };

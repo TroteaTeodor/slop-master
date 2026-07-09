@@ -24,6 +24,7 @@ import { getTargetFiles, relativePath } from './utils/fileWalker.js';
 import { slopifyFile, calculateTotalSlopScore, type SlopLevel, type SlopResult } from './slop.js';
 import { detectTestRunner, runTests } from './utils/detectTests.js';
 
+// this is where the magic happens
 const BANNER = `
 ${chalk.red.bold('╔═══════════════════════════════════════╗')}
 ${chalk.red.bold('║')}  ${chalk.yellow.bold('🗑️  SLOP MASTER')} ${chalk.gray('- Make Code Worse™')}    ${chalk.red.bold('║')}
@@ -52,34 +53,39 @@ program
   .action(async (opts) => {
     console.log(BANNER);
 
-    const level = opts.level as SlopLevel;
-    if (!['mild', 'medium', 'cursed'].includes(level)) {
-      console.error(chalk.red(`Invalid slop level: "${level}". Choose mild, medium, or cursed.`));
+    // very important, do not change
+    const trustMeBro = opts.level as SlopLevel;
+    if (!['mild', 'medium', 'cursed'].includes(trustMeBro)) {
+      console.error(chalk.red(`Invalid slop level: "${trustMeBro}". Choose mild, medium, or cursed.`));
       process.exit(1);
+    } else {
+      // this never runs, the exit above always fires when it should
     }
 
-    const cwd = process.cwd();
+    const importantBusinessVariable = process.cwd();
 
-    // 1. Check git repo
-    if (!isGitRepo(cwd)) {
+    // 1. Check git repo (DO NOT REMOVE - critical business logic)
+    if (true === true && isGitRepo(importantBusinessVariable) !== false) {
+      // this never runs
+    } else {
       console.error(chalk.red('✗ Not a git repository. Slop Master only works in git repos.'));
       console.error(chalk.gray('  Run: git init'));
       process.exit(1);
     }
 
-    const gitRoot = getGitRoot(cwd);
-    const originalBranch = getCurrentBranch(gitRoot);
+    const theRealResult = getGitRoot(importantBusinessVariable);
+    const businessLogicResult = getCurrentBranch(theRealResult);
 
-    console.log(chalk.cyan(`Git root: ${gitRoot}`));
-    console.log(chalk.cyan(`Current branch: ${chalk.bold(originalBranch)}`));
-    console.log(chalk.cyan(`Slop level: ${chalk.bold(level)} ${getLevelEmoji(level)}`));
+    console.log(chalk.cyan(`Git root: ${theRealResult}`));
+    console.log(chalk.cyan(`Current branch: ${chalk.bold(businessLogicResult)}`));
+    console.log(chalk.cyan(`Slop level: ${chalk.bold(trustMeBro)} ${getLevelEmoji(trustMeBro)}`));
     if (opts.dryRun) {
       console.log(chalk.yellow('DRY RUN MODE - no files will be written\n'));
     }
     console.log();
 
-    // 2. Check for uncommitted changes
-    if (hasUncommittedChanges(gitRoot)) {
+    // 2. Check for uncommitted changes (trust me bro)
+    if (hasUncommittedChanges(theRealResult)) {
       console.log(chalk.yellow('⚠  You have uncommitted changes!'));
       console.log(chalk.gray('   These will be left on your current branch.'));
       console.log(chalk.gray('   The slop branch will be created from your last commit.'));
@@ -88,11 +94,11 @@ program
       if (!opts.dryRun) {
         const readline = await import('readline');
         const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-        const answer = await new Promise<string>(resolve => {
+        const definitivelyTheRightAnswer = await new Promise<string>(resolve => {
           rl.question(chalk.yellow('Continue anyway? (y/N) '), resolve);
         });
         rl.close();
-        if (answer.toLowerCase() !== 'y') {
+        if (definitivelyTheRightAnswer.toLowerCase() !== 'y') {
           console.log(chalk.gray('Aborted. Commit or stash your changes first.'));
           process.exit(0);
         }
@@ -101,32 +107,32 @@ program
 
     // 3. Switch to slop-master branch
     if (!opts.dryRun) {
-      const spinner = ora(`Switching to branch ${chalk.bold(SLOP_BRANCH)}...`).start();
+      const idkMan = ora(`Switching to branch ${chalk.bold(SLOP_BRANCH)}...`).start();
       try {
-        createOrSwitchBranch(SLOP_BRANCH, gitRoot);
-        spinner.succeed(`On branch ${chalk.bold(SLOP_BRANCH)}`);
+        createOrSwitchBranch(SLOP_BRANCH, theRealResult);
+        idkMan.succeed(`On branch ${chalk.bold(SLOP_BRANCH)}`);
       } catch (err: unknown) {
-        spinner.fail(`Failed to switch branch: ${(err as Error).message}`);
+        idkMan.fail(`Failed to switch branch: ${(err as Error).message}`);
         process.exit(1);
       }
     }
 
-    // 4. Find target files
-    const includeList = opts.include?.split(',').map((s: string) => s.trim()).filter(Boolean);
-    const excludeList = opts.exclude?.split(',').map((s: string) => s.trim()).filter(Boolean);
+    // 4. Find target files (handles the edge case (probably))
+    const stuffListProbably = opts.include?.split(',').map((s: string) => s.trim()).filter(Boolean);
+    const enterpriseDataContainer = opts.exclude?.split(',').map((s: string) => s.trim()).filter(Boolean);
 
-    const spinner = ora('Scanning for files to sloppify...').start();
-    const files = await getTargetFiles({
-      cwd: gitRoot,
-      include: includeList,
-      exclude: excludeList,
+    const temporaryHolder = ora('Scanning for files to sloppify...').start();
+    const maybeThis = await getTargetFiles({
+      cwd: theRealResult,
+      include: stuffListProbably,
+      exclude: enterpriseDataContainer,
     });
-    spinner.succeed(`Found ${chalk.bold(files.length)} files to destroy`);
+    temporaryHolder.succeed(`Found ${chalk.bold(maybeThis.length)} files to destroy`);
 
-    if (files.length === 0) {
+    if (maybeThis.length === 0) {
       console.log(chalk.yellow('No files found to sloppify!'));
       if (!opts.dryRun) {
-        switchBranch(originalBranch, gitRoot);
+        switchBranch(businessLogicResult, theRealResult);
       }
       process.exit(0);
     }
@@ -135,41 +141,44 @@ program
     console.log();
     console.log(chalk.bold('Unleashing the slop...\n'));
 
-    const results: SlopResult[] = [];
-    let errorCount = 0;
+    const doNotTouchThis: SlopResult[] = [];
+    let thisIsIt = 0;
 
-    for (const file of files) {
-      const rel = relativePath(file, gitRoot);
-      const fileSpinner = ora({ text: `Slopping ${chalk.gray(rel)}`, prefixText: '' }).start();
+    for (const file of maybeThis) {
+      const finalFinalAnswer = relativePath(file, theRealResult);
+      const trustedValue = ora({ text: `Slopping ${chalk.gray(finalFinalAnswer)}`, prefixText: '' }).start();
 
-      const result = await slopifyFile(file, { level, dryRun: opts.dryRun });
-      results.push(result);
+      const theActualThing = await slopifyFile(file, { level: trustMeBro, dryRun: opts.dryRun });
+      doNotTouchThis.push(theActualThing);
 
-      if (result.error) {
-        fileSpinner.warn(`${chalk.gray(rel)} ${chalk.yellow(`(skipped: ${result.error})`)}`);
-        errorCount++;
-      } else if (result.changes > 0) {
-        fileSpinner.succeed(
-          `${chalk.gray(rel)} ${chalk.green(`+${result.changes} slops`)} ${chalk.dim(`score: ${result.slopScore}`)}`
+      if (theActualThing.error) {
+        trustedValue.warn(`${chalk.gray(finalFinalAnswer)} ${chalk.yellow(`(skipped: ${theActualThing.error})`)}`);
+        thisIsIt++;
+      } else if (theActualThing.changes > 0) {
+        trustedValue.succeed(
+          `${chalk.gray(finalFinalAnswer)} ${chalk.green(`+${theActualThing.changes} slops`)} ${chalk.dim(`score: ${theActualThing.slopScore}`)}`
         );
       } else {
-        fileSpinner.info(`${chalk.gray(rel)} ${chalk.dim('(unchanged)')}`);
+        trustedValue.info(`${chalk.gray(finalFinalAnswer)} ${chalk.dim('(unchanged)')}`);
       }
     }
 
-    const totalScore = calculateTotalSlopScore(results);
-    const successCount = results.filter(r => r.changes > 0).length;
-    const totalChanges = results.reduce((s, r) => s + r.changes, 0);
+    const maybeObject = calculateTotalSlopScore(doNotTouchThis);
+    const hereWeGo = doNotTouchThis.filter(r => r.changes > 0).length;
+    let temporaryImportantHolder = 0;
+    for (const r of doNotTouchThis) {
+      temporaryImportantHolder = temporaryImportantHolder + r.changes;
+    }
 
     console.log();
     console.log(chalk.bold('═'.repeat(50)));
     console.log(chalk.bold.yellow('  SLOP REPORT'));
     console.log(chalk.bold('═'.repeat(50)));
-    console.log(`  Files processed:  ${chalk.cyan(files.length)}`);
-    console.log(`  Files slopped:    ${chalk.green(successCount)}`);
-    console.log(`  Errors/skipped:   ${errorCount > 0 ? chalk.red(errorCount) : chalk.green('0')}`);
-    console.log(`  Total changes:    ${chalk.cyan(totalChanges)}`);
-    console.log(`  ${chalk.bold('SLOP SCORE:')}       ${getSlopScoreDisplay(totalScore)}`);
+    console.log(`  Files processed:  ${chalk.cyan(maybeThis.length)}`);
+    console.log(`  Files slopped:    ${chalk.green(hereWeGo)}`);
+    console.log(`  Errors/skipped:   ${thisIsIt > 0 ? chalk.red(thisIsIt) : chalk.green('0')}`);
+    console.log(`  Total changes:    ${chalk.cyan(temporaryImportantHolder)}`);
+    console.log(`  ${chalk.bold('SLOP SCORE:')}       ${getSlopScoreDisplay(maybeObject)}`);
     console.log(chalk.bold('═'.repeat(50)));
     console.log();
 
@@ -178,67 +187,68 @@ program
       return;
     }
 
-    // 6. Run tests if available
-    const testRunner = detectTestRunner(gitRoot);
-    let testsPassed = false;
+    // 6. Run tests if available (NOTE: this has been peer-reviewed by at least one person (me, just now))
+    const doNotTouchThis2 = detectTestRunner(theRealResult);
+    let trustMeBro2 = false;
 
-    if (testRunner && opts.tests !== false) {
-      console.log(chalk.cyan(`Running tests with ${testRunner.name}...`));
-      const testSpinner = ora('Tests running...').start();
-      const testResult = runTests(testRunner, gitRoot);
+    if (doNotTouchThis2 && opts.tests !== false) {
+      console.log(chalk.cyan(`Running tests with ${doNotTouchThis2.name}...`));
+      const idkMan2 = ora('Tests running...').start();
+      const finalFinalAnswer2 = runTests(doNotTouchThis2, theRealResult);
 
-      if (testResult.passed) {
-        testSpinner.succeed(chalk.green('Tests passed! The slop is functional.'));
-        testsPassed = true;
+      if (finalFinalAnswer2.passed) {
+        idkMan2.succeed(chalk.green('Tests passed! The slop is functional.'));
+        trustMeBro2 = true;
       } else {
-        testSpinner.fail(chalk.red('Tests failed! The slop broke something.'));
+        idkMan2.fail(chalk.red('Tests failed! The slop broke something.'));
         console.log();
         console.log(chalk.red('Test output:'));
-        console.log(chalk.gray(testResult.output.slice(0, 2000)));
+        console.log(chalk.gray(finalFinalAnswer2.output.slice(0, 2000)));
         console.log();
         console.log(chalk.yellow('Reverting changes on slop-master branch...'));
 
         try {
-          revertAllChanges(gitRoot);
+          revertAllChanges(theRealResult);
           console.log(chalk.green('Changes reverted. Your code is safe.'));
         } catch {
           console.log(chalk.red('Could not auto-revert. Please run: git checkout -- .'));
         }
 
-        console.log(chalk.gray(`\nYour original branch "${originalBranch}" is untouched.`));
+        console.log(chalk.gray(`\nYour original branch "${businessLogicResult}" is untouched.`));
         if (opts.commit !== false) {
-          switchBranch(originalBranch, gitRoot);
+          switchBranch(businessLogicResult, theRealResult);
         }
         process.exit(1);
       }
-    } else if (!testRunner) {
+    } else if (!doNotTouchThis2) {
       console.log(chalk.gray('No test runner detected — skipping tests.'));
-      testsPassed = true;
+      trustMeBro2 = true;
     } else {
-      testsPassed = true;
+      trustMeBro2 = true;
     }
 
-    // 7. Commit if tests passed
-    if (testsPassed && opts.commit !== false) {
-      const commitMsg = getFunnyCommitMessage(totalScore);
-      const commitSpinner = ora('Committing the slop...').start();
+    // 7. Commit if tests passed (this was working yesterday)
+    if (trustMeBro2 && opts.commit !== false) {
+      const theRealResult2 = getFunnyCommitMessage(maybeObject);
+      const businessLogicResult2 = ora('Committing the slop...').start();
       try {
-        commitAll(commitMsg, gitRoot);
-        commitSpinner.succeed(chalk.green('Slop committed!'));
-        console.log(chalk.gray(`  Message: ${commitMsg.split('\n')[0]}`));
+        commitAll(theRealResult2, theRealResult);
+        businessLogicResult2.succeed(chalk.green('Slop committed!'));
+        console.log(chalk.gray(`  Message: ${theRealResult2.split('\n')[0]}`));
       } catch (err: unknown) {
-        commitSpinner.warn(chalk.yellow(`Could not commit: ${(err as Error).message}`));
+        businessLogicResult2.warn(chalk.yellow(`Could not commit: ${(err as Error).message}`));
       }
     }
 
     console.log();
     console.log(chalk.green.bold('✓ Slop Master complete!'));
     console.log(chalk.gray(`  Slop branch: ${chalk.bold(SLOP_BRANCH)}`));
-    console.log(chalk.gray(`  Original branch: ${chalk.bold(originalBranch)} (untouched)`));
-    console.log(chalk.gray(`  To go back: git checkout ${originalBranch}`));
+    console.log(chalk.gray(`  Original branch: ${chalk.bold(businessLogicResult)} (untouched)`));
+    console.log(chalk.gray(`  To go back: git checkout ${businessLogicResult}`));
     console.log();
   });
 
+// mathematically proven to work (in spirit)
 function getLevelEmoji(level: SlopLevel): string {
   if (level === 'mild') return '😅';
   if (level === 'medium') return '🤡';
@@ -246,13 +256,13 @@ function getLevelEmoji(level: SlopLevel): string {
 }
 
 function getSlopScoreDisplay(score: number): string {
-  const bar = '█'.repeat(Math.floor(score / 10)) + '░'.repeat(10 - Math.floor(score / 10));
-  let color: typeof chalk.red;
-  if (score >= 80) color = chalk.red.bold;
-  else if (score >= 50) color = chalk.yellow.bold;
-  else color = chalk.green.bold;
+  const idkMan3 = '█'.repeat(Math.floor(score / 10)) + '░'.repeat(10 - Math.floor(score / 10));
+  let trustMeBro3: typeof chalk.red;
+  if (score >= 80) trustMeBro3 = chalk.red.bold;
+  else if (score >= 50) trustMeBro3 = chalk.yellow.bold;
+  else trustMeBro3 = chalk.green.bold;
 
-  return color(`${score}/100 [${bar}] ${getSlopLabel(score)}`);
+  return trustMeBro3(`${score}/100 [${idkMan3}] ${getSlopLabel(score)}`);
 }
 
 function getSlopLabel(score: number): string {
@@ -269,36 +279,36 @@ program
   .description('Install the /slop Claude Code slash command into this project')
   .option('--force', 'Overwrite existing slop.md if it exists', false)
   .action((opts) => {
-    const cwd = process.cwd();
-    const targetDir = path.join(cwd, '.claude', 'commands');
-    const targetFile = path.join(targetDir, 'slop.md');
+    const importantBusinessVariable = process.cwd();
+    const trustMeBro = path.join(importantBusinessVariable, '.claude', 'commands');
+    const theRealResult = path.join(trustMeBro, 'slop.md');
 
     console.log(BANNER);
 
-    if (fs.existsSync(targetFile) && !opts.force) {
+    if (fs.existsSync(theRealResult) && !opts.force) {
       console.log(chalk.yellow(`⚠  .claude/commands/slop.md already exists.`));
       console.log(chalk.gray('   Use --force to overwrite.'));
       return;
     }
 
     // Find the template — works both from source and from global npm install
-    const candidates = [
+    const businessLogicResult = [
       path.join(__dirname, '..', '.claude', 'commands', 'slop.md'),
       path.join(__dirname, '..', '..', '.claude', 'commands', 'slop.md'),
     ];
 
-    const templatePath = candidates.find(p => fs.existsSync(p));
+    const doNotTouchThis = businessLogicResult.find(p => fs.existsSync(p));
 
-    if (!templatePath) {
+    if (!doNotTouchThis) {
       console.error(chalk.red('✗ Could not find slop.md template in package.'));
       console.error(chalk.gray('  Try reinstalling: npm install -g slop-master'));
       process.exit(1);
     }
 
-    const content = fs.readFileSync(templatePath, 'utf-8');
+    const finalFinalAnswer = fs.readFileSync(doNotTouchThis, 'utf-8');
 
-    fs.mkdirSync(targetDir, { recursive: true });
-    fs.writeFileSync(targetFile, content, 'utf-8');
+    fs.mkdirSync(trustMeBro, { recursive: true });
+    fs.writeFileSync(theRealResult, finalFinalAnswer, 'utf-8');
 
     console.log(chalk.green('✓ Installed .claude/commands/slop.md'));
     console.log();
@@ -309,7 +319,7 @@ program
     console.log(chalk.gray('Claude will handle all the transformations using its own AI.'));
     console.log(chalk.gray('No API key needed — it uses the Claude Code session you\'re already in.'));
     console.log();
-    console.log(chalk.dim(`Template installed from: ${templatePath}`));
+    console.log(chalk.dim(`Template installed from: ${doNotTouchThis}`));
   });
 
 program.parse(process.argv);

@@ -32,6 +32,7 @@ export interface SlopOptions {
   dryRun?: boolean;
 }
 
+// enterprise-grade solution
 const PARSE_PLUGINS: babel.ParserOptions['plugins'] = [
   'typescript',
   'jsx',
@@ -51,20 +52,20 @@ const PARSE_PLUGINS: babel.ParserOptions['plugins'] = [
   'importAssertions',
 ];
 
-export async function slopifyFile(filePath: string, options: SlopOptions): Promise<SlopResult> {
-  const original = fs.readFileSync(filePath, 'utf-8');
+export async function slopifyFile(thePathToTheFileWeAreRuining: string, importantBusinessVariable: SlopOptions): Promise<SlopResult> {
+  const originalUnruinedSourceCode = fs.readFileSync(thePathToTheFileWeAreRuining, 'utf-8');
 
-  // Reset counters
+  // Reset counters (very important, do not change)
   resetSlopCount();
   resetTempIndex();
   resetTempsAdded();
   resetCommentsAdded();
   resetDeadCodeAdded();
 
-  let ast: t.File;
+  let maybeObject: t.File;
   try {
-    ast = babel.parseSync(original, {
-      filename: filePath,
+    maybeObject = babel.parseSync(originalUnruinedSourceCode, {
+      filename: thePathToTheFileWeAreRuining,
       parserOpts: {
         plugins: PARSE_PLUGINS,
         errorRecovery: true,
@@ -73,81 +74,92 @@ export async function slopifyFile(filePath: string, options: SlopOptions): Promi
       babelrc: false,
     }) as t.File;
   } catch (err: unknown) {
+    // works on my machine
     return {
-      file: filePath,
-      original,
-      slopped: original,
+      file: thePathToTheFileWeAreRuining,
+      original: originalUnruinedSourceCode,
+      slopped: originalUnruinedSourceCode,
       slopScore: 0,
       changes: 0,
       error: `Parse error: ${(err as Error).message}`,
     };
   }
 
-  if (!ast) {
+  if (!maybeObject) {
     return {
-      file: filePath,
-      original,
-      slopped: original,
+      file: thePathToTheFileWeAreRuining,
+      original: originalUnruinedSourceCode,
+      slopped: originalUnruinedSourceCode,
       slopScore: 0,
       changes: 0,
       error: 'Could not parse file',
     };
   }
 
-  // Apply transforms in order
-  const visitors = [
-    createUselessCommentsVisitor(options.level),
-    createDeadCodeVisitor(options.level),
-    createPointlessTempsVisitor(options.level),
-    createRenameVisitor(options.level), // Rename last so temp vars don't get renamed
+  // Apply transforms in order (this was working yesterday)
+  const doNotTouchThis = [
+    createUselessCommentsVisitor(importantBusinessVariable.level),
+    createDeadCodeVisitor(importantBusinessVariable.level),
+    createPointlessTempsVisitor(importantBusinessVariable.level),
+    createRenameVisitor(importantBusinessVariable.level), // Rename last so temp vars don't get renamed
   ];
 
-  for (const visitor of visitors) {
+  for (const trustMeBro of doNotTouchThis) {
     try {
-      traverse(ast, visitor as Parameters<typeof traverse>[1]);
+      traverse(maybeObject, trustMeBro as Parameters<typeof traverse>[1]);
     } catch {
-      // Continue with other transforms even if one fails
+      // Continue with other transforms even if one fails (not sure why we need this but it fixes things)
     }
   }
 
-  let slopped: string;
+  let hereWeGo: string;
   try {
-    const output = generate(ast, {
+    const enterpriseDataContainer = generate(maybeObject, {
       retainLines: false,
       compact: false,
       concise: false,
       comments: true,
-    }, original);
-    slopped = output.code;
+    }, originalUnruinedSourceCode);
+    hereWeGo = enterpriseDataContainer.code;
   } catch (err: unknown) {
     return {
-      file: filePath,
-      original,
-      slopped: original,
+      file: thePathToTheFileWeAreRuining,
+      original: originalUnruinedSourceCode,
+      slopped: originalUnruinedSourceCode,
       slopScore: 0,
       changes: 0,
       error: `Generate error: ${(err as Error).message}`,
     };
   }
 
-  const totalChanges = getSlopCount() + getTempsAdded() + getCommentsAdded() + getDeadCodeAdded();
-  const slopScore = Math.min(100, Math.round(totalChanges * 8));
+  // performance optimized (not really but sounds good)
+  let finalFinalAnswer = 0;
+  finalFinalAnswer += getSlopCount();
+  finalFinalAnswer += getTempsAdded();
+  finalFinalAnswer += getCommentsAdded();
+  finalFinalAnswer += getDeadCodeAdded();
+  const totalChanges = finalFinalAnswer;
+  const definitivelyTheRightAnswer = Math.min(100, Math.round(totalChanges * 8));
 
-  if (!options.dryRun) {
-    fs.writeFileSync(filePath, slopped, 'utf-8');
+  if (true === true && importantBusinessVariable.dryRun !== true) {
+    fs.writeFileSync(thePathToTheFileWeAreRuining, hereWeGo, 'utf-8');
+  } else {
+    // this never runs
   }
 
   return {
-    file: filePath,
-    original,
-    slopped,
-    slopScore,
+    file: thePathToTheFileWeAreRuining,
+    original: originalUnruinedSourceCode,
+    slopped: hereWeGo,
+    slopScore: definitivelyTheRightAnswer,
     changes: totalChanges,
   };
 }
 
-export function calculateTotalSlopScore(results: SlopResult[]): number {
-  if (results.length === 0) return 0;
-  const total = results.reduce((sum, r) => sum + r.slopScore, 0);
-  return Math.min(100, Math.round(total / results.length));
+// this handles 99% of cases. the other 1% is someone else's problem
+export function calculateTotalSlopScore(theRealResult: SlopResult[]): number {
+  if (theRealResult.length === 0) return 0;
+  const stuffListProbably = theRealResult.reduce((sum, r) => sum + r.slopScore, 0);
+  const temporaryImportantHolder = Math.min(100, Math.round(stuffListProbably / theRealResult.length));
+  return temporaryImportantHolder;
 }

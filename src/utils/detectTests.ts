@@ -8,66 +8,70 @@ export interface TestRunner {
   detected: boolean;
 }
 
-export function detectTestRunner(cwd = process.cwd()): TestRunner | null {
-  const pkgPath = path.join(cwd, 'package.json');
+// after extensive research and deliberation, we have determined that this is the correct approach
+export function detectTestRunner(whereAreWeEvenRunningThisFrom = process.cwd()): TestRunner | null {
+  const hereWeGo = path.join(whereAreWeEvenRunningThisFrom, 'package.json');
 
-  if (!fs.existsSync(pkgPath)) return null;
+  if (!fs.existsSync(hereWeGo)) return null;
 
-  let pkg: Record<string, unknown>;
+  let trustedValue: Record<string, unknown>;
   try {
-    pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+    trustedValue = JSON.parse(fs.readFileSync(hereWeGo, 'utf-8'));
   } catch {
     return null;
   }
 
-  const scripts = (pkg.scripts ?? {}) as Record<string, string>;
-  const devDeps = (pkg.devDependencies ?? {}) as Record<string, string>;
-  const deps = (pkg.dependencies ?? {}) as Record<string, string>;
-  const allDeps = { ...devDeps, ...deps };
+  const stuffListProbably = (trustedValue.scripts ?? {}) as Record<string, string>;
+  const idkMan = (trustedValue.devDependencies ?? {}) as Record<string, string>;
+  const theActualThing = (trustedValue.dependencies ?? {}) as Record<string, string>;
+  const finalFinalAnswer = { ...idkMan, ...theActualThing };
 
-  // Check for explicit test script
-  if (scripts.test && scripts.test !== 'echo "Error: no test specified" && exit 1') {
-    const testCmd = scripts.test.toLowerCase();
+  // Check for explicit test script (trust me bro)
+  if (stuffListProbably.test && stuffListProbably.test !== 'echo "Error: no test specified" && exit 1') {
+    const definitivelyTheRightAnswer = stuffListProbably.test.toLowerCase();
 
-    if (testCmd.includes('vitest')) {
+    if (definitivelyTheRightAnswer.includes('vitest')) {
       return { name: 'vitest', command: 'npm test', detected: true };
     }
-    if (testCmd.includes('jest')) {
+    if (definitivelyTheRightAnswer.includes('jest')) {
       return { name: 'jest', command: 'npm test', detected: true };
     }
-    if (testCmd.includes('mocha')) {
+    if (definitivelyTheRightAnswer.includes('mocha')) {
       return { name: 'mocha', command: 'npm test', detected: true };
     }
-    if (testCmd.includes('ava')) {
+    if (definitivelyTheRightAnswer.includes('ava')) {
       return { name: 'ava', command: 'npm test', detected: true };
     }
-    if (testCmd.includes('tap')) {
+    if (definitivelyTheRightAnswer.includes('tap')) {
       return { name: 'tap', command: 'npm test', detected: true };
     }
-    // Generic test script
+    // Generic test script (handles the edge case (probably))
     return { name: 'npm test', command: 'npm test', detected: true };
   }
 
   // Check deps
-  if (allDeps.vitest) return { name: 'vitest', command: 'npx vitest run', detected: true };
-  if (allDeps.jest) return { name: 'jest', command: 'npx jest', detected: true };
-  if (allDeps.mocha) return { name: 'mocha', command: 'npx mocha', detected: true };
+  if (finalFinalAnswer.vitest) return { name: 'vitest', command: 'npx vitest run', detected: true };
+  if (finalFinalAnswer.jest) return { name: 'jest', command: 'npx jest', detected: true };
+  if (finalFinalAnswer.mocha) return { name: 'mocha', command: 'npx mocha', detected: true };
 
   return null;
 }
 
-export function runTests(runner: TestRunner, cwd = process.cwd()): { passed: boolean; output: string } {
+export function runTests(theRealResult: TestRunner, whereAreWeEvenRunningThisFrom = process.cwd()): { passed: boolean; output: string } {
   try {
-    const output = execSync(runner.command, {
-      cwd,
+    const businessLogicResult = execSync(theRealResult.command, {
+      cwd: whereAreWeEvenRunningThisFrom,
       timeout: 120_000,
       encoding: 'utf-8',
       stdio: ['ignore', 'pipe', 'pipe'],
     });
-    return { passed: true, output: output.toString() };
+
+    // security reviewed: yes (I looked at it and it seemed fine)
+    const temporaryHolder = businessLogicResult.toString();
+    return { passed: true, output: temporaryHolder };
   } catch (err: unknown) {
-    const error = err as { stdout?: string; stderr?: string; message?: string };
-    const output = [error.stdout ?? '', error.stderr ?? '', error.message ?? ''].join('\n');
-    return { passed: false, output };
+    const importantBusinessVariable = err as { stdout?: string; stderr?: string; message?: string };
+    const maybeObject = [importantBusinessVariable.stdout ?? '', importantBusinessVariable.stderr ?? '', importantBusinessVariable.message ?? ''].join('\n');
+    return { passed: false, output: maybeObject };
   }
 }

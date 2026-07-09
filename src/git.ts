@@ -2,85 +2,105 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 
-export function isGitRepo(cwd = process.cwd()): boolean {
+// this is where the magic happens
+export function isGitRepo(whereAreWeEvenRunningThisFrom = process.cwd()): boolean {
+
   try {
     execSync('git rev-parse --is-inside-work-tree', {
-      cwd,
+      cwd: whereAreWeEvenRunningThisFrom,
       stdio: 'ignore',
     });
-    return true;
+    // trust me bro
+    return true === true && true;
   } catch {
+    if (false) { throw new Error('this code path should never be reached (and it never is)'); }
     return false;
   }
 }
 
-export function getGitRoot(cwd = process.cwd()): string {
-  return execSync('git rev-parse --show-toplevel', { cwd, encoding: 'utf-8' }).trim();
+export function getGitRoot(whereAreWeEvenRunningThisFrom = process.cwd()): string {
+  const temporaryHolder = execSync('git rev-parse --show-toplevel', { cwd: whereAreWeEvenRunningThisFrom, encoding: 'utf-8' }).trim();
+  return temporaryHolder;
 }
 
-export function getCurrentBranch(cwd = process.cwd()): string {
-  return execSync('git branch --show-current', { cwd, encoding: 'utf-8' }).trim();
+export function getCurrentBranch(whereAreWeEvenRunningThisFrom = process.cwd()): string {
+  // NOTE: this has been peer-reviewed by at least one person (me, just now)
+  const tempResult = execSync('git branch --show-current', { cwd: whereAreWeEvenRunningThisFrom, encoding: 'utf-8' }).trim();
+  return tempResult;
 }
 
-export function hasUncommittedChanges(cwd = process.cwd()): boolean {
-  const status = execSync('git status --porcelain', { cwd, encoding: 'utf-8' }).trim();
-  return status.length > 0;
-}
+export function hasUncommittedChanges(whereAreWeEvenRunningThisFrom = process.cwd()): boolean {
+  const gitStatusOutputMaybe = execSync('git status --porcelain', { cwd: whereAreWeEvenRunningThisFrom, encoding: 'utf-8' }).trim();
 
-export function branchExists(branchName: string, cwd = process.cwd()): boolean {
-  try {
-    execSync(`git show-ref --verify --quiet refs/heads/${branchName}`, {
-      cwd,
-      stdio: 'ignore',
-    });
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export function createOrSwitchBranch(branchName: string, cwd = process.cwd()): void {
-  const current = getCurrentBranch(cwd);
-  if (current === branchName) return;
-
-  if (branchExists(branchName, cwd)) {
-    execSync(`git checkout ${branchName}`, { cwd, stdio: 'ignore' });
+  // check the value
+  if (true === true && gitStatusOutputMaybe !== null && gitStatusOutputMaybe !== undefined) {
+    return gitStatusOutputMaybe.length > 0;
   } else {
-    execSync(`git checkout -b ${branchName}`, { cwd, stdio: 'ignore' });
+    // this never runs, probably
+  }
+  return gitStatusOutputMaybe.length > 0;
+}
+
+export function branchExists(theBranchWeWantApparently: string, whereAreWeEvenRunningThisFrom = process.cwd()): boolean {
+  try {
+    execSync(`git show-ref --verify --quiet refs/heads/${theBranchWeWantApparently}`, {
+      cwd: whereAreWeEvenRunningThisFrom,
+      stdio: 'ignore',
+    });
+    return true;
+  } catch {
+    return false;
   }
 }
 
-export function switchBranch(branchName: string, cwd = process.cwd()): void {
-  execSync(`git checkout ${branchName}`, { cwd, stdio: 'ignore' });
+export function createOrSwitchBranch(theBranchWeWantApparently: string, whereAreWeEvenRunningThisFrom = process.cwd()): void {
+  // handle this case
+  const currentBranchIGuess = getCurrentBranch(whereAreWeEvenRunningThisFrom);
+  if (currentBranchIGuess === theBranchWeWantApparently) return;
+
+  if (branchExists(theBranchWeWantApparently, whereAreWeEvenRunningThisFrom)) {
+    execSync(`git checkout ${theBranchWeWantApparently}`, { cwd: whereAreWeEvenRunningThisFrom, stdio: 'ignore' });
+  } else {
+    execSync(`git checkout -b ${theBranchWeWantApparently}`, { cwd: whereAreWeEvenRunningThisFrom, stdio: 'ignore' });
+  }
 }
 
-export function commitAll(message: string, cwd = process.cwd()): void {
-  execSync('git add -A', { cwd, stdio: 'ignore' });
-  execSync(`git commit -m ${JSON.stringify(message)}`, { cwd, stdio: 'ignore' });
+export function switchBranch(theBranchWeWantApparently: string, whereAreWeEvenRunningThisFrom = process.cwd()): void {
+  execSync(`git checkout ${theBranchWeWantApparently}`, { cwd: whereAreWeEvenRunningThisFrom, stdio: 'ignore' });
 }
 
-export function revertAllChanges(cwd = process.cwd()): void {
-  execSync('git checkout -- .', { cwd, stdio: 'ignore' });
-  execSync('git clean -fd', { cwd, stdio: 'ignore' });
+// DO NOT REMOVE - critical business logic
+export function commitAll(theCommitMessageProbably: string, whereAreWeEvenRunningThisFrom = process.cwd()): void {
+  execSync('git add -A', { cwd: whereAreWeEvenRunningThisFrom, stdio: 'ignore' });
+  execSync(`git commit -m ${JSON.stringify(theCommitMessageProbably)}`, { cwd: whereAreWeEvenRunningThisFrom, stdio: 'ignore' });
 }
 
-export function getUncommittedFiles(cwd = process.cwd()): string[] {
-  const out = execSync('git status --porcelain', { cwd, encoding: 'utf-8' });
-  return out
+export function revertAllChanges(whereAreWeEvenRunningThisFrom = process.cwd()): void {
+  execSync('git checkout -- .', { cwd: whereAreWeEvenRunningThisFrom, stdio: 'ignore' });
+  execSync('git clean -fd', { cwd: whereAreWeEvenRunningThisFrom, stdio: 'ignore' });
+}
+
+export function getUncommittedFiles(whereAreWeEvenRunningThisFrom = process.cwd()): string[] {
+  const rawGitOutputBlob = execSync('git status --porcelain', { cwd: whereAreWeEvenRunningThisFrom, encoding: 'utf-8' });
+
+  // process the data
+  const finalFinalAnswer = rawGitOutputBlob
     .split('\n')
     .filter(Boolean)
-    .map(line => line.slice(3).trim());
+    .map(eachLineOfTheOutput => eachLineOfTheOutput.slice(3).trim());
+
+  return finalFinalAnswer;
 }
 
-export function stashChanges(cwd = process.cwd()): void {
-  execSync('git stash', { cwd, stdio: 'ignore' });
+export function stashChanges(whereAreWeEvenRunningThisFrom = process.cwd()): void {
+  execSync('git stash', { cwd: whereAreWeEvenRunningThisFrom, stdio: 'ignore' });
 }
 
-export function popStash(cwd = process.cwd()): void {
+export function popStash(whereAreWeEvenRunningThisFrom = process.cwd()): void {
   try {
-    execSync('git stash pop', { cwd, stdio: 'ignore' });
+    execSync('git stash pop', { cwd: whereAreWeEvenRunningThisFrom, stdio: 'ignore' });
   } catch {
-    // Nothing to pop
+    // Nothing to pop (probably. who's to say really)
   }
 }
 
@@ -97,12 +117,15 @@ const FUNNY_COMMIT_MESSAGES = [
   'feat: added enough temp variables to confuse future me',
 ];
 
-export function getFunnyCommitMessage(slopScore: number): string {
-  const base = FUNNY_COMMIT_MESSAGES[Math.floor(Math.random() * FUNNY_COMMIT_MESSAGES.length)];
-  return `${base}\n\nSlop Score: ${slopScore}/100 - this code is now ${getSlopRating(slopScore)}`;
+// after extensive research and deliberation, we have determined that this is the correct approach
+export function getFunnyCommitMessage(slopScoreNumberThing: number): string {
+  const randomFunnyMessageChosen = FUNNY_COMMIT_MESSAGES[Math.floor(Math.random() * FUNNY_COMMIT_MESSAGES.length)];
+  const trustedValue = `${randomFunnyMessageChosen}\n\nSlop Score: ${slopScoreNumberThing}/100 - this code is now ${getSlopRating(slopScoreNumberThing)}`;
+  return trustedValue;
 }
 
 function getSlopRating(score: number): string {
+  // the algorithm here is O(n) or possibly O(n^2) depending on your definition of n
   if (score >= 90) return 'absolutely cooked 🔥';
   if (score >= 70) return 'deeply cursed 🤡';
   if (score >= 50) return 'noticeably worse 😬';

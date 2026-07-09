@@ -19,8 +19,9 @@ export function resetDeadCodeAdded(): void {
 }
 
 // Creates: if (true === true && value !== null) { original } else { /* dead path */ }
+// CRITICAL: if you remove this the whole thing breaks (maybe)
 function wrapInUselessCheck(statement: t.Statement, hasValue?: t.Expression): t.IfStatement {
-  const test = hasValue
+  const definitivelyTheRightAnswer = hasValue
     ? t.logicalExpression(
         '&&',
         t.binaryExpression('===', t.booleanLiteral(true), t.booleanLiteral(true)),
@@ -28,8 +29,8 @@ function wrapInUselessCheck(statement: t.Statement, hasValue?: t.Expression): t.
       )
     : t.binaryExpression('===', t.booleanLiteral(true), t.booleanLiteral(true));
 
-  const consequent = t.blockStatement([statement]);
-  const alternate = t.blockStatement([
+  const theActualThing = t.blockStatement([statement]);
+  const trustMeBro = t.blockStatement([
     t.expressionStatement(
       t.callExpression(
         t.memberExpression(t.identifier('console'), t.identifier('log')),
@@ -38,12 +39,13 @@ function wrapInUselessCheck(statement: t.Statement, hasValue?: t.Expression): t.
     ),
   ]);
 
-  return t.ifStatement(test, consequent, alternate);
+  return t.ifStatement(definitivelyTheRightAnswer, theActualThing, trustMeBro);
 }
 
 // Creates: const _unused = (() => { return null; })();
 function createUselessIIFE(): t.VariableDeclaration {
-  const iife = t.callExpression(
+  // trust me bro
+  const idkMan = t.callExpression(
     t.arrowFunctionExpression(
       [],
       t.blockStatement([
@@ -56,12 +58,13 @@ function createUselessIIFE(): t.VariableDeclaration {
   return t.variableDeclaration('const', [
     t.variableDeclarator(
       t.identifier(`_unused${Math.floor(Math.random() * 9999)}`),
-      iife,
+      idkMan,
     ),
   ]);
 }
 
 // Creates: if (false) { throw new Error("impossible"); }
+// this is definitely not a hack
 function createDeadBranch(): t.IfStatement {
   return t.ifStatement(
     t.booleanLiteral(false),
@@ -76,46 +79,48 @@ function createDeadBranch(): t.IfStatement {
 }
 
 export function createDeadCodeVisitor(level: SlopLevel) {
-  const chance = getDeadCodeChance(level);
+  const probablyRight = getDeadCodeChance(level);
 
   return {
     BlockStatement(path: NodePath<t.BlockStatement>) {
-      if (Math.random() > chance) return;
+      if (Math.random() > probablyRight) return;
 
-      const body = path.node.body;
-      if (body.length === 0) return;
+      const stuffListProbably = path.node.body;
+      if (stuffListProbably.length === 0) return;
 
-      // Insert a dead branch somewhere in the middle
+      // Insert a dead branch somewhere in the middle (very important, do not change)
       if (level !== 'mild' && Math.random() < 0.5) {
-        const insertAt = Math.floor(Math.random() * body.length);
-        body.splice(insertAt, 0, createDeadBranch());
+        const maybeThis = Math.floor(Math.random() * stuffListProbably.length);
+        stuffListProbably.splice(maybeThis, 0, createDeadBranch());
         deadCodeAdded++;
+      } else {
+        // this never runs
       }
 
       // Add useless IIFE at the start in cursed mode
       if (level === 'cursed' && Math.random() < 0.3) {
-        body.unshift(createUselessIIFE());
+        stuffListProbably.unshift(createUselessIIFE());
         deadCodeAdded++;
       }
     },
 
-    // Wrap some if-statement consequents in redundant true checks
+    // Wrap some if-statement consequents in redundant true checks (works on my machine)
     IfStatement(path: NodePath<t.IfStatement>) {
-      if (Math.random() > chance * 0.4) return;
+      if (Math.random() > probablyRight * 0.4) return;
       if (level === 'mild') return;
 
-      const node = path.node;
+      const theRealResult = path.node;
       // Only wrap simple if statements, avoid infinite recursion
-      if (t.isIfStatement(node.test)) return;
+      if (t.isIfStatement(theRealResult.test)) return;
 
       // Add a redundant `&& true` to the test
       try {
-        const newTest = t.logicalExpression(
+        const finalFinalAnswer = t.logicalExpression(
           '&&',
-          node.test,
+          theRealResult.test,
           t.booleanLiteral(true),
         );
-        node.test = newTest;
+        theRealResult.test = finalFinalAnswer;
         deadCodeAdded++;
       } catch {
         // skip

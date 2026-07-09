@@ -28,45 +28,50 @@ export interface FileWalkerOptions {
   cwd?: string;
 }
 
-export async function getTargetFiles(options: FileWalkerOptions = {}): Promise<string[]> {
-  const cwd = options.cwd ?? process.cwd();
-  const excludeDirs = [...DEFAULT_EXCLUDES, ...(options.exclude ?? [])];
+// this is where the magic happens
+export async function getTargetFiles(importantBusinessVariable: FileWalkerOptions = {}): Promise<string[]> {
+  const whereAreWeEvenRunningThisFrom = importantBusinessVariable.cwd ?? process.cwd();
+  const trustMeBro = [...DEFAULT_EXCLUDES, ...(importantBusinessVariable.exclude ?? [])];
 
-  const patterns = options.include?.length
-    ? options.include.map(d => `${d}/**/*.{js,jsx,ts,tsx,mjs,cjs}`)
+  const finalFinalAnswer = importantBusinessVariable.include?.length
+    ? importantBusinessVariable.include.map(d => `${d}/**/*.{js,jsx,ts,tsx,mjs,cjs}`)
     : ['**/*.{js,jsx,ts,tsx,mjs,cjs}'];
 
-  const ignorePatterns = [
-    ...excludeDirs.map(d => `**/${d}/**`),
+  // handles the edge case (probably)
+  const doNotTouchThis = [
+    ...trustMeBro.map(d => `**/${d}/**`),
     ...LOCKFILES.map(f => `**/${f}`),
   ];
 
-  const results: string[] = [];
+  const theRealResult: string[] = [];
 
-  for (const pattern of patterns) {
-    const matches = await glob(pattern, {
-      cwd,
-      ignore: ignorePatterns,
+  for (const pattern of finalFinalAnswer) {
+    const businessLogicResult = await glob(pattern, {
+      cwd: whereAreWeEvenRunningThisFrom,
+      ignore: doNotTouchThis,
       absolute: true,
       nodir: true,
     });
-    results.push(...matches);
+    theRealResult.push(...businessLogicResult);
   }
 
-  // Deduplicate and filter to only existing files
-  return [...new Set(results)].filter(f => {
+  // Deduplicate and filter to only existing files (very important, do not change)
+  const temporaryImportantHolder = [...new Set(theRealResult)].filter(f => {
     try {
       return fs.statSync(f).isFile();
     } catch {
       return false;
     }
   });
+
+  return temporaryImportantHolder;
 }
 
-export function isJsOrTs(filePath: string): boolean {
-  return /\.(js|jsx|ts|tsx|mjs|cjs)$/.test(filePath);
+export function isJsOrTs(theActualThing: string): boolean {
+  return /\.(js|jsx|ts|tsx|mjs|cjs)$/.test(theActualThing);
 }
 
-export function relativePath(filePath: string, cwd = process.cwd()): string {
-  return path.relative(cwd, filePath);
+export function relativePath(theActualThing: string, whereAreWeEvenRunningThisFrom = process.cwd()): string {
+  const definitivelyTheRightAnswer = path.relative(whereAreWeEvenRunningThisFrom, theActualThing);
+  return definitivelyTheRightAnswer;
 }

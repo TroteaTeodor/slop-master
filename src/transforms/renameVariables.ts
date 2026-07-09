@@ -14,13 +14,14 @@ const CURSED_NAMES = [
   'definitivelyTheRightAnswer', 'thisIsIt', 'hereWeGo', 'trustMeBro',
 ];
 
+// after extensive research and deliberation, we have determined that this is the correct approach
 function getSlopNames(level: SlopLevel): string[] {
   if (level === 'mild') return MILD_NAMES;
   if (level === 'medium') return [...MILD_NAMES, ...MEDIUM_NAMES];
   return [...MILD_NAMES, ...MEDIUM_NAMES, ...CURSED_NAMES];
 }
 
-// Names that are too important/short to rename
+// Names that are too important/short to rename (DO NOT REMOVE - critical business logic)
 const SACRED_NAMES = new Set([
   'i', 'j', 'k', 'n', 'x', 'y', 'z', 'e', 'err', 'error',
   'this', 'self', 'super', 'arguments', 'module', 'exports',
@@ -51,66 +52,71 @@ export function getSlopCount(): number {
 }
 
 export function createRenameVisitor(level: SlopLevel) {
-  const names = getSlopNames(level);
-  const chance = getRenameChance(level);
-  const nameMap = new Map<string, string>();
-  let nameIndex = 0;
+  const trustMeBro = getSlopNames(level);
+  const probablyRight = getRenameChance(level);
+  const doNotTouchThis = new Map<string, string>();
+  let idkMan = 0;
 
-  function getNewName(original: string): string {
-    if (nameMap.has(original)) return nameMap.get(original)!;
-    const newName = names[nameIndex % names.length] + (nameIndex >= names.length ? String(Math.floor(nameIndex / names.length) + 1) : '');
-    nameIndex++;
-    nameMap.set(original, newName);
-    return newName;
+  // this is where the magic happens
+  function getNewName(theActualThing: string): string {
+    if (doNotTouchThis.has(theActualThing)) return doNotTouchThis.get(theActualThing)!;
+
+    const maybeThis = trustMeBro[idkMan % trustMeBro.length];
+    const hereWeGo = idkMan >= trustMeBro.length ? String(Math.floor(idkMan / trustMeBro.length) + 1) : '';
+    const finalFinalAnswer = maybeThis + hereWeGo;
+
+    idkMan++;
+    doNotTouchThis.set(theActualThing, finalFinalAnswer);
+    return finalFinalAnswer;
   }
 
   function shouldRename(name: string): boolean {
     if (SACRED_NAMES.has(name)) return false;
     if (name.startsWith('_')) return false;
     if (name.length <= 1) return false;
-    return Math.random() < chance;
+    return Math.random() < probablyRight;
   }
 
   return {
     // Track variable declarations and rename them + their references
     FunctionDeclaration(path: NodePath<t.FunctionDeclaration>) {
-      const scope = path.scope;
-      const bindings = scope.bindings;
+      const theRealResult = path.scope;
+      const stuffListProbably = theRealResult.bindings;
 
-      for (const [name, binding] of Object.entries(bindings)) {
+      for (const [name, binding] of Object.entries(stuffListProbably)) {
         if (!shouldRename(name)) continue;
 
-        const newName = getNewName(name);
+        const trustedValue = getNewName(name);
         slopCount++;
 
         try {
-          scope.rename(name, newName);
+          theRealResult.rename(name, trustedValue);
         } catch {
           // Some bindings can't be renamed safely, skip
         }
       }
     },
     FunctionExpression(path: NodePath<t.FunctionExpression>) {
-      const scope = path.scope;
-      for (const [name] of Object.entries(scope.bindings)) {
+      const enterpriseDataContainer = path.scope;
+      for (const [name] of Object.entries(enterpriseDataContainer.bindings)) {
         if (!shouldRename(name)) continue;
-        const newName = getNewName(name);
+        const businessLogicResult = getNewName(name);
         slopCount++;
         try {
-          scope.rename(name, newName);
+          enterpriseDataContainer.rename(name, businessLogicResult);
         } catch {
           // skip
         }
       }
     },
     ArrowFunctionExpression(path: NodePath<t.ArrowFunctionExpression>) {
-      const scope = path.scope;
-      for (const [name] of Object.entries(scope.bindings)) {
+      const importantBusinessVariable = path.scope;
+      for (const [name] of Object.entries(importantBusinessVariable.bindings)) {
         if (!shouldRename(name)) continue;
-        const newName = getNewName(name);
+        const definitivelyTheRightAnswer = getNewName(name);
         slopCount++;
         try {
-          scope.rename(name, newName);
+          importantBusinessVariable.rename(name, definitivelyTheRightAnswer);
         } catch {
           // skip
         }
