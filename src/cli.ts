@@ -3,6 +3,11 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import ora from 'ora';
 import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import {
   isGitRepo,
@@ -258,5 +263,53 @@ function getSlopLabel(score: number): string {
   if (score >= 10) return '😅 BARELY SLOPPY';
   return '🌱 NEEDS MORE SLOP';
 }
+
+program
+  .command('init')
+  .description('Install the /slop Claude Code slash command into this project')
+  .option('--force', 'Overwrite existing slop.md if it exists', false)
+  .action((opts) => {
+    const cwd = process.cwd();
+    const targetDir = path.join(cwd, '.claude', 'commands');
+    const targetFile = path.join(targetDir, 'slop.md');
+
+    console.log(BANNER);
+
+    if (fs.existsSync(targetFile) && !opts.force) {
+      console.log(chalk.yellow(`⚠  .claude/commands/slop.md already exists.`));
+      console.log(chalk.gray('   Use --force to overwrite.'));
+      return;
+    }
+
+    // Find the template — works both from source and from global npm install
+    const candidates = [
+      path.join(__dirname, '..', '.claude', 'commands', 'slop.md'),
+      path.join(__dirname, '..', '..', '.claude', 'commands', 'slop.md'),
+    ];
+
+    const templatePath = candidates.find(p => fs.existsSync(p));
+
+    if (!templatePath) {
+      console.error(chalk.red('✗ Could not find slop.md template in package.'));
+      console.error(chalk.gray('  Try reinstalling: npm install -g slop-master'));
+      process.exit(1);
+    }
+
+    const content = fs.readFileSync(templatePath, 'utf-8');
+
+    fs.mkdirSync(targetDir, { recursive: true });
+    fs.writeFileSync(targetFile, content, 'utf-8');
+
+    console.log(chalk.green('✓ Installed .claude/commands/slop.md'));
+    console.log();
+    console.log(chalk.bold('You can now type:'));
+    console.log(chalk.cyan('  /slop'));
+    console.log(chalk.gray('inside Claude Code to sloppify this project.'));
+    console.log();
+    console.log(chalk.gray('Claude will handle all the transformations using its own AI.'));
+    console.log(chalk.gray('No API key needed — it uses the Claude Code session you\'re already in.'));
+    console.log();
+    console.log(chalk.dim(`Template installed from: ${templatePath}`));
+  });
 
 program.parse(process.argv);

@@ -2,17 +2,24 @@
   "name": "slop-master",
   "version": "1.0.0",
   "description": "Make your code worse. On purpose. For fun.",
+  "type": "module",
   "main": "dist/cli.js",
   "bin": {
-    "slop-master": "dist/cli.js"
+    "slop-master": "dist/cli.js",
+    "slop": "dist/cli.js"
   },
+  "files": [
+    "dist/",
+    ".claude/",
+    "README.md"
+  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && node scripts/add-shebang.js",
     "dev": "tsx src/cli.ts",
     "slop": "tsx src/cli.ts slop",
-    "prepare": "npm run build"
+    "prepublishOnly": "npm run build"
   },
-  "keywords": ["slop", "cursed", "code-transformation", "funny", "ast"],
+  "keywords": ["slop", "cursed", "code-transformation", "funny", "ast", "claude", "claude-code"],
   "license": "MIT",
   "dependencies": {
     "@babel/core": "^7.23.0",

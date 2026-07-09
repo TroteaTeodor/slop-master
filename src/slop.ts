@@ -1,7 +1,13 @@
 import * as babel from '@babel/core';
-import traverse from '@babel/traverse';
-import generate from '@babel/generator';
+import _traverse from '@babel/traverse';
+import _generate from '@babel/generator';
 import * as t from '@babel/types';
+
+// CJS modules need .default unwrap when imported in an ESM context
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const traverse = ((_traverse as any).default ?? _traverse) as any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const generate = ((_generate as any).default ?? _generate) as any;
 import fs from 'fs';
 import path from 'path';
 
