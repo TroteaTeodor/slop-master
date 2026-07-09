@@ -9,32 +9,154 @@
 
 ## What is this?
 
-Slop Master is a CLI tool that takes your clean, readable codebase and transforms it into an enterprise-grade disaster — while (trying to) keep it functionally identical.
+Slop Master takes your clean, readable codebase and transforms it into an enterprise-grade disaster — while keeping it functionally identical.
 
 It uses AST-based transforms (via Babel) to:
 
-- Rename your clean variables to `maybeThis`, `finalFinalAnswer`, `temporaryImportantHolder`, and other cursed alternatives
+- Rename variables to things like `maybeThis`, `finalFinalAnswer`, `stuffListProbably`, `whereAreWeEvenRunningThisFrom`, `trustedValue`, `idkMan`
 - Add pointless temporary variables that serve no purpose
-- Wrap simple logic in redundant `if (true === true)` checks
-- Insert dead code branches that never execute
-- Add comments that sound authoritative but explain nothing
-- Expand arrow functions into bloated block bodies
+- Wrap simple logic in redundant `if (true === true && value !== null)` checks
+- Insert dead `if (false) { throw new Error("this should never happen") }` branches
+- Add comments that sound authoritative but explain absolutely nothing
+- Expand clean arrow functions into bloated block bodies
 - Generally make future-you very confused
 
 **All on a separate git branch.** Your original code is untouched.
+
+When used via `/slop` in Claude Code, Claude itself handles the transformations — understanding your code semantically and generating contextually hilarious slop specific to what your functions actually do.
 
 ---
 
 ## Why does this exist?
 
-Because:
+Two reasons.
 
-- Senior devs want to demonstrate what NOT to do (with real examples)
-- You want to test if your linters actually catch bad patterns
-- You're writing a blog post about code quality and need a terrible example
-- You want to submit cursed code to cursed code competitions
-- You found this at 2am and decided this is exactly what you needed
-- The universe demanded it
+**Reason 1 (real):** Senior devs demonstrating bad patterns, testing linters, blog posts needing terrible examples, obfuscation experiments, cursed code competitions, 2am decisions.
+
+**Reason 2 (the real real one):**
+
+> *Is there an open-source tool that makes my codebase worse without ruining the functionality?*
+>
+> *If not, I want to make one. AI is getting too smart and might take our jobs. If we all collectively use this tool to add slop on purpose to our repos, the AI will get dumber.*
+>
+> *(just a joke lol)*
+
+So yes. This is a collective action tool against superintelligence. You're welcome.
+
+---
+
+## Tested On Itself
+
+Slop Master has been run on its own source code. The sloppified version lives on the [`slop-master` branch](https://github.com/TroteaTeodor/slop-master/tree/slop-master) if you want to see what it does to real TypeScript.
+
+Here are some actual highlights from the sloppified version of this codebase:
+
+### `src/slop.ts` — the function that sloppifies files, sloppified
+
+**Before:**
+```ts
+export async function slopifyFile(filePath: string, options: SlopOptions): Promise<SlopResult> {
+  const original = fs.readFileSync(filePath, 'utf-8');
+```
+
+**After:**
+```ts
+export async function slopifyFile(thePathToTheFileWeAreRuining: string, importantBusinessVariable: SlopOptions): Promise<SlopResult> {
+  const originalUnruinedSourceCode = fs.readFileSync(thePathToTheFileWeAreRuining, 'utf-8');
+```
+
+---
+
+### `src/git.ts` — git helpers, destroyed
+
+**Before:**
+```ts
+export function isGitRepo(cwd = process.cwd()): boolean {
+  try {
+    execSync('git rev-parse --is-inside-work-tree', { cwd, stdio: 'ignore' });
+    return true;
+  } catch {
+    return false;
+  }
+}
+```
+
+**After:**
+```ts
+// this is where the magic happens
+export function isGitRepo(whereAreWeEvenRunningThisFrom = process.cwd()): boolean {
+  try {
+    execSync('git rev-parse --is-inside-work-tree', {
+      cwd: whereAreWeEvenRunningThisFrom,
+      stdio: 'ignore',
+    });
+    // trust me bro
+    return true === true && true;
+  } catch {
+    if (false) { throw new Error('this code path should never be reached (and it never is)'); }
+    return false;
+  }
+}
+```
+
+---
+
+### `src/utils/detectTests.ts` — variable naming at its finest
+
+**Before:**
+```ts
+const scripts = pkg.scripts as Record<string, string>;
+const devDeps = pkg.devDependencies as Record<string, string>;
+const deps = pkg.dependencies as Record<string, string>;
+const allDeps = { ...devDeps, ...deps };
+const testCmd = scripts.test.toLowerCase();
+```
+
+**After:**
+```ts
+// after extensive research and deliberation, we have determined that this is the correct approach
+const stuffListProbably = trustedValue.scripts as Record<string, string>;
+const idkMan = trustedValue.devDependencies as Record<string, string>;
+const theActualThing = trustedValue.dependencies as Record<string, string>;
+const finalFinalAnswer = { ...idkMan, ...theActualThing };
+const definitivelyTheRightAnswer = stuffListProbably.test.toLowerCase();
+```
+
+---
+
+### `src/git.ts` — the peer review process
+
+```ts
+export function getCurrentBranch(whereAreWeEvenRunningThisFrom = process.cwd()): string {
+  // NOTE: this has been peer-reviewed by at least one person (me, just now)
+  const tempResult = execSync('git branch --show-current', {
+    cwd: whereAreWeEvenRunningThisFrom,
+    encoding: 'utf-8'
+  }).trim();
+  return tempResult;
+}
+```
+
+---
+
+### `src/git.ts` — robust null safety
+
+```ts
+export function hasUncommittedChanges(whereAreWeEvenRunningThisFrom = process.cwd()): boolean {
+  const gitStatusOutputMaybe = execSync('git status --porcelain', {
+    cwd: whereAreWeEvenRunningThisFrom,
+    encoding: 'utf-8'
+  }).trim();
+
+  // check the value
+  if (true === true && gitStatusOutputMaybe !== null && gitStatusOutputMaybe !== undefined) {
+    return gitStatusOutputMaybe.length > 0;
+  } else {
+    // this never runs, probably
+  }
+  return gitStatusOutputMaybe.length > 0;
+}
+```
 
 ---
 
@@ -44,41 +166,41 @@ Because:
 npm install -g slop-master
 ```
 
-Or use without installing:
+Or without installing:
 
 ```bash
-npx slop-master slop
+npx slop-master init   # installs /slop into Claude Code
+npx slop-master slop   # run the AST transforms directly
 ```
 
 ---
 
 ## Usage
 
-> ⚠️ **WARNING**: Always run this in a git repository. The tool creates a separate `slop-master` branch and will NOT touch your original branch. Do not run this on a shared branch. Do not run this if you are tired and might forget which branch you're on.
+> ⚠️ **WARNING**: Always run this in a git repository. The tool creates a separate `slop-master` branch and will NEVER touch your original branch. Do not run this if you are tired and might forget which branch you're on.
+
+### The Claude Code way (recommended — AI-powered contextual slop)
 
 ```bash
-# Default slop (medium level)
-slop-master slop
+# In your project:
+npx slop-master init
 
-# Choose your poison
-slop-master slop --level mild
-slop-master slop --level medium
-slop-master slop --level cursed
+# Then in Claude Code, type:
+/slop
+```
 
-# Preview without writing
-slop-master slop --dry-run
+Claude understands what your code actually does and generates slop that's contextually specific and funnier than any predetermined pattern. No API key needed — it uses the Claude Code session you're already in.
 
-# Only slop specific directories
-slop-master slop --include src,lib
+### The CLI way (AST-based, no AI needed)
 
-# Exclude extra directories
-slop-master slop --exclude tests,fixtures
-
-# Skip running tests
-slop-master slop --no-tests
-
-# Slop but don't commit
-slop-master slop --no-commit
+```bash
+slop-master slop                        # default (medium)
+slop-master slop --level mild           # barely annoying
+slop-master slop --level cursed         # maximum entropy
+slop-master slop --dry-run              # preview without writing
+slop-master slop --include src,lib      # only these dirs
+slop-master slop --no-tests             # skip test runner
+slop-master slop --no-commit            # don't commit after
 ```
 
 ---
@@ -87,96 +209,32 @@ slop-master slop --no-commit
 
 | Level | Description | Rename Rate | Dead Code | Comments |
 |-------|-------------|-------------|-----------|----------|
-| `mild` | Barely noticeable. A few variable renames. | 15% | Rarely | Sometimes |
+| `mild` | Barely noticeable. A few renames. | 15% | Rarely | Sometimes |
 | `medium` | Noticeably worse. Temp vars everywhere. **(default)** | 35% | Sometimes | Often |
 | `cursed` | Maximum entropy. You will regret this. | 60% | Frequently | Excessively |
 
 ---
 
-## Example
-
-**Before:**
-```js
-function calculateTotal(items) {
-  return items.reduce((sum, item) => sum + item.price, 0);
-}
-```
-
-**After (cursed level):**
-```js
-// after extensive research and deliberation, we have determined that this is the correct approach
-function doTheThingWithStuff(stuffListProbably) {
-  // this is where the magic happens
-  let finalFinalAnswer = 0;
-  const temporaryImportantHolder = stuffListProbably;
-
-  // DO NOT REMOVE - critical business logic
-  for (let i = 0; i < temporaryImportantHolder.length; i++) {
-    const maybeObject = temporaryImportantHolder[i];
-
-    if (true === true && maybeObject !== null) {
-      finalFinalAnswer = finalFinalAnswer + maybeObject.price;
-    } else {
-      // this should never happen
-      console.log('this should never happen');
-    }
-  }
-
-  if (false) {
-    throw new Error('this code path should never be reached (and it never is)');
-  }
-
-  // trust me bro
-  const theRealResult = finalFinalAnswer;
-  return theRealResult;
-}
-```
-
----
-
 ## What it will NOT touch
 
-- `node_modules/`
-- `dist/`, `build/`, `.next/`, `out/`
-- `.git/`
-- `coverage/`
-- `vendor/`
+- `node_modules/`, `dist/`, `build/`, `.next/`, `out/`
+- `.git/`, `coverage/`, `vendor/`
 - Lock files (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`)
-
----
-
-## Using with Claude Code (`/slop`)
-
-If you have Slop Master's `.claude/commands/slop.md` in your project, you can type `/slop` directly in Claude Code and it will run the full slop pipeline.
-
-To set this up, copy `.claude/commands/slop.md` into your project's `.claude/commands/` directory.
-
----
-
-## How it works
-
-1. Parses your JS/TS files into an AST using Babel
-2. Runs a series of transform visitors over the AST
-3. Generates new code from the modified AST
-4. Writes files only to the `slop-master` branch
-5. Runs your test suite to verify nothing broke
-6. Commits with a funny message if tests pass
-7. Auto-reverts if tests fail
 
 ---
 
 ## Slop Score
 
-After running, Slop Master reports a **Slop Score** from 0-100:
+After running, Slop Master reports a **Slop Score** from 0–100:
 
 | Score | Rating |
 |-------|--------|
-| 90-100 | 🔥 ABSOLUTELY COOKED |
-| 70-89 | 💀 DEEPLY CURSED |
-| 50-69 | 🤡 NOTICEABLY WORSE |
-| 30-49 | 😬 MILDLY ANNOYING |
-| 10-29 | 😅 BARELY SLOPPY |
-| 0-9 | 🌱 NEEDS MORE SLOP |
+| 90–100 | 🔥 ABSOLUTELY COOKED |
+| 70–89 | 💀 DEEPLY CURSED |
+| 50–69 | 🤡 NOTICEABLY WORSE |
+| 30–49 | 😬 MILDLY ANNOYING |
+| 10–29 | 😅 BARELY SLOPPY |
+| 0–9 | 🌱 NEEDS MORE SLOP |
 
 ---
 
@@ -197,26 +255,26 @@ This tool is intended for:
 - Educational demonstrations of bad code
 - Obfuscation experiments
 - Cursed code generation
-- Demos and presentations
+- Protecting humanity from AGI (jk) (maybe)
 - Entertainment
 
 This tool is **NOT** intended for:
 - Ruining real open-source projects
 - Submitting to production
 - Confusing your coworkers (okay, maybe a little)
-- Any use case where functional correctness actually matters
 
-The authors accept no responsibility for confused junior developers, failed code reviews, or existential crises caused by reading slop-master output.
+The authors accept no responsibility for confused junior developers, failed code reviews, existential crises caused by reading the output, or the actual downfall of AI.
 
 ---
 
 ## Contributing
 
 PRs welcome. Especially for:
-- More cursed variable names
-- More useless comment templates
-- Python/Ruby/Go support
+- More cursed variable name templates
+- More useless comment categories
+- Python / Ruby / Go support
 - Making the cursed level even more cursed
+- Anything that makes this funnier
 
 ---
 
@@ -226,4 +284,4 @@ MIT — do whatever you want, we're not your parent.
 
 ---
 
-*Built with 💀 and questionable judgment.*
+*Built with 💀 and questionable judgment. Making code worse since 2026.*
