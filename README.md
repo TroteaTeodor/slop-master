@@ -3,7 +3,10 @@
 > *Make your code worse. On purpose. For science.*
 
 [![npm version](https://img.shields.io/npm/v/slop-master.svg)](https://www.npmjs.com/package/slop-master)
+[![npm downloads](https://img.shields.io/npm/dm/slop-master.svg)](https://www.npmjs.com/package/slop-master)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**[→ View on npm](https://www.npmjs.com/package/slop-master)**
 
 ---
 
